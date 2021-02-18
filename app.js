@@ -3,7 +3,7 @@
 ******************************************************************/
 let user = {};
 let business = "299570274432519";
-let app_id = "419849085936757"
+let app_id = "419849085936757";
 
 /******************************************************************
 * Loading SDK
@@ -84,7 +84,7 @@ function get_user_data(){
         user.fid = response.id;
         user.name = response.name;
 
-        FB.api('/me/accounts',function(response){
+        FB.api('/me/accounts?fields=picture,id,name,access_token',function(response){
             var pages = response.data;
             user.pages = [];
 
@@ -95,14 +95,19 @@ function get_user_data(){
                 var page = pages[i];
                 user.pages.push(page);
 
+                let img = '<img src="'+page.picture.data.url+'" />';
+
                 if( check_page(page.id) ){
-                    var btn = '<button disabled="disabled" style="width: 115px;">Granted</button>';
+                    var btn = '<button disabled="disabled">Granted</button>';
                 }else{
                     var btn = '<button data-id="'+page.id+'" data-name="'+page.name+'" data-token="'+page.access_token+'">Grant access</button>';
                 }
 
-                $("#app #select-pages").append('<p><span>'+page.name+'</span><span>'+btn+'</span></p>');
+                $("#app #select-pages").append('<p>'+img+'<span>'+page.name+'</span><span>'+btn+'</span></p>');
             }
+
+            $("#app").append('<div id="create-page"><a href="#" target="_blank">Create page for me</a></div>');
+
             $("#loading").css({'display':'none'});
         });
     });

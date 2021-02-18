@@ -14,6 +14,14 @@ h2{
     margin: 15px auto;
 }
 
+button{
+    width: 115px;
+}
+
+.wrapper{
+    width: 100%;
+}
+
 #loading{
     position: absolute;
     top: 0;
@@ -49,6 +57,7 @@ h2{
     box-sizing: border-box;
     margin-top: 30px;
     margin-bottom: 30px;
+    flex-wrap: wrap;
 }
 
 #select-pages{
@@ -63,6 +72,15 @@ h2{
     padding: 15px;
     margin: 15px;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#select-pages img{
+    width: 50px;
+    border-radius: 100px;
+    border: 1px solid #f1f1f1;
 }
 
 #select-pages p span{
@@ -88,6 +106,22 @@ h2{
     margin-top: 50px;
 }
 
+#create-page{
+    margin-top: 30px;
+    margin-bottom: 30px;
+    align-self: flex-start;
+}
+
+#create-page a{
+    display: inline-block;
+    margin: 0 auto;
+    padding: 10px 20px;
+    background: #139ef8;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 2px;
+}
+
 .login{
     text-align: center;
     width: 100%;
@@ -98,8 +132,4 @@ h2{
     max-width: 60%;
     margin: 0 auto 15px auto;
     font-size: 14px;
-}
-
-.wrapper{
-    width: 100%;
 }
