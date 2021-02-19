@@ -74,7 +74,7 @@ function check_permissions(){
 * Get user data and display pages
 ******************************************************************/
 function get_user_data(){
-    FB.api("/me", {fields: 'id,name,email'}, function (response) {
+    FB.api("/me", {fields: 'id,name,email,picture'}, function (response) {
         if(typeof response.email == 'undefined'){
             user.email = null;
         }else{
@@ -83,13 +83,15 @@ function get_user_data(){
 
         user.fid = response.id;
         user.name = response.name;
+        user.image = response.picture.data.url;
+        user.image_tag = '<img src="'+user.image+'" id="user-image"/>';
 
         FB.api('/me/accounts?fields=picture,id,name,access_token',function(response){
             var pages = response.data;
             user.pages = [];
 
             $("#app").html('');
-            $("#app").html('<div class="wrapper"><h2>Hi, ' +user.name+'</h2><p>Select and give access to any of the following pages.</p><div id="select-pages"></div></div>');
+            $("#app").html('<div class="wrapper">'+user.image_tag+'<h2>Hi, ' +user.name+'</h2><p>Select and give access to any of the following pages.</p><div id="select-pages"></div></div>');
 
             for(i=0, len = pages.length; i < len; i++){
                 var page = pages[i];
@@ -98,15 +100,15 @@ function get_user_data(){
                 let img = '<img src="'+page.picture.data.url+'" />';
 
                 if( check_page(page.id) ){
-                    var btn = '<button disabled="disabled">Granted</button>';
+                    var btn = '<button disabled="disabled" class="granted">Granted</button>';
                 }else{
                     var btn = '<button data-id="'+page.id+'" data-name="'+page.name+'" data-token="'+page.access_token+'">Grant access</button>';
                 }
 
-                $("#app #select-pages").append('<p>'+img+'<span>'+page.name+'</span><span>'+btn+'</span></p>');
+                $("#app #select-pages").append('<p>'+img+'<a href="https://facebook.com/'+page.id+'" target="_blank">'+page.name+'</a><span>'+btn+'</span></p>');
             }
 
-            $("#app").append('<div id="create-page"><a href="#" target="_blank">Create page for me</a></div>');
+            $("#app").append('<div id="create-page"><a href="https://onboardinggal.webflow.io/" target="_blank">Create page for me</a></div>');
 
             $("#loading").css({'display':'none'});
         });
