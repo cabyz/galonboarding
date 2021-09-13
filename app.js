@@ -1,16 +1,12 @@
-/******************************************************************
-* Global config
-******************************************************************/
+let base_url = 'http://localhost:3001/';
 let user = {};
 let business = "299570274432519";
-let app_id = "419849085936757";
-
 /******************************************************************
 * Loading SDK
 ******************************************************************/
 window.fbAsyncInit = function() {
     FB.init({
-        appId   : app_id,
+        appId   : '419849085936757',
         oauth   : true,
         status  : true, // check login status
         cookie  : true, // enable cookies to allow the server to access the session
@@ -23,9 +19,7 @@ window.fbAsyncInit = function() {
 * Login function
 ******************************************************************/
 function fb_login() {
-
-    $("#loading").css({'display':'flex'});
-
+    //$("#loading").css({'display':'flex'});
     FB.login(function(response) {
         if (response.authResponse) {
             user.token = response.authResponse.accessToken;
@@ -33,6 +27,7 @@ function fb_login() {
             check_permissions();
         }else {
             $("#loading").css({'display':'none'});
+            console.log('Request is canceled.');
         }
     },{ scope: 'pages_show_list,public_profile,business_management'});
 }
@@ -61,7 +56,7 @@ function check_permissions(){
                 get_user_data();
                 get_client_pages();
             }else{
-                alert('Please accept all the permissions.');
+                console.log('Please accept all the permissions.');
                 FB.api('/me/permissions', 'DELETE', function(response) {
                     location.reload();
                 });
@@ -71,55 +66,44 @@ function check_permissions(){
 }
 
 /******************************************************************
-* Get user data and display pages
+* Get user data and subscribe pages to app
 ******************************************************************/
 function get_user_data(){
-    FB.api("/me", {fields: 'id,name,email,picture'}, function (response) {
+    FB.api("/me", {fields: 'id,name,email'}, function (response) {
         if(typeof response.email == 'undefined'){
             user.email = null;
         }else{
             user.email = response.email;
         }
-
         user.fid = response.id;
         user.name = response.name;
-        user.image = response.picture.data.url;
-        user.image_tag = '<img src="'+user.image+'" id="user-image"/>';
 
-        FB.api('/me/accounts?fields=picture,id,name,access_token',function(response){
+        FB.api('/me/accounts',function(response){
             var pages = response.data;
             user.pages = [];
 
             $("#app").html('');
-            $("#app").html('<div class="wrapper">'+user.image_tag+'<h2>Hi, ' +user.name+'</h2><p>Select and give access to any of the following pages.</p><div id="select-pages"></div></div>');
+            $("#app").html('<div class="wrapper"><h2>Hi, ' +user.name+'</h2><p>Select and give access to any of the following pages.</p><div id="select-pages"></div></div>');
 
             for(i=0, len = pages.length; i < len; i++){
                 var page = pages[i];
                 user.pages.push(page);
 
-                let img = '<img src="'+page.picture.data.url+'" />';
-
                 if( check_page(page.id) ){
-                    var btn = '<button disabled="disabled" class="granted">Granted</button>';
+                    var btn = '<button disabled="disabled" style="width: 115px;">Granted</button>';
                 }else{
                     var btn = '<button data-id="'+page.id+'" data-name="'+page.name+'" data-token="'+page.access_token+'">Grant access</button>';
                 }
 
-                $("#app #select-pages").append('<p>'+img+'<a href="https://facebook.com/'+page.id+'" target="_blank">'+page.name+'</a><span>'+btn+'</span></p>');
+                $("#app #select-pages").append('<p><span>'+page.name+'</span><span>'+btn+'</span></p>');
             }
-
-            $("#app").append('<div id="create-page"><a href="https://onboardinggal.webflow.io/" target="_blank">Create page for me</a></div>');
-
             $("#loading").css({'display':'none'});
         });
     });
 }
 
-/******************************************************************
-* Grant page access click handler
-******************************************************************/
 $(document).on('click', '#select-pages button', function() {
-    $("#loading").css({'display':'flex'});
+    //$("#loading").css({'display':'flex'});
     var page = {
         id: $(this).attr('data-id'),
         name: $(this).attr('data-name'),
@@ -133,14 +117,11 @@ $(document).on('click', '#select-pages button', function() {
     }
 });
 
-/******************************************************************
-* Granting page access
-******************************************************************/
 function grant_access(page){
     FB.api('/'+business+'/client_pages', 'post',
         {
             page_id: page.id,
-            permitted_tasks: ['ADVERTISE', 'ANALYZE'],
+            permitted_tasks: ['MANAGE', 'CREATE_CONTENT', 'MODERATE', 'ADVERTISE', 'ANALYZE'],
             access_token: user.token,
         },
         function(response){
@@ -156,25 +137,52 @@ function grant_access(page){
     );
 }
 
-/******************************************************************
-* Get list of already granted pages
-******************************************************************/
 function get_client_pages(){
     FB.api('/'+business+'/client_pages',function(response){
         user.granted = response.data; 
     });
 }
 
-/******************************************************************
-* Check pages against granted list
-******************************************************************/
 function check_page(page_id){
     var found = false;
+    if(user.granted){
     for(var i = 0; i < user.granted.length; i++) {
         if (user.granted[i].id == page_id) {
             found = true;
             break;
         }
     }
+    }
     return found;
+}
+
+/******************************************************************
+* Send data to API for storage
+******************************************************************/
+function save_data(){
+    user.box_fk = 'random-box-fk';
+    user.api_key = 'random-api-key';
+    user.api_user = 'random-api-user';
+    user.location_box_fk = 'random-location-box-fk';
+
+    $.post(base_url+"app/save",{ data: user },
+        function(data, status){
+            console.log(data);
+        }
+    );
+    return true;
+}
+
+/******************************************************************
+* Subscribe all user Facebook pages for Leads
+******************************************************************/
+function subscribe(page_id, page_name, token){
+    FB.api('/'+page_id+'/subscribed_apps', 'post',
+    {
+        access_token: token,
+        subscribed_fields: 'leadgen'
+    },
+    function(response){
+        return true;
+    });
 }
